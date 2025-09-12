@@ -16,13 +16,13 @@ julia> @syms A B
 (A, B)
 
 julia> trigexpand(cos(A) * cos(B))
-(1//2)*(cos(A - B) + cos(A + B))
+(1//2)*(cos(A + B) + cos(A - B))
 
 julia> @syms t ω φ ψ
 (t, ω, φ, ψ)
 
 julia> trigexpand(cos(ω*t + φ) * cos(ω*t + φ - ψ))
-(1//2)*(cos(ψ) + cos(2φ - ψ + 2t*ω))
+(1//2)*(cos(2φ - ψ + 2t*ω) + cos(ψ))
 ```
 """
 function trigexpand(expr)
