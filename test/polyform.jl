@@ -120,6 +120,26 @@ let v = only(DP.@polyvar __PolyToGcdFormTest__ monomial_order = MonomialOrder)
             @test T <: Rational
         end
 
+        # `Int64` has to be a FLOOR on the widening, not a ceiling. Narrowing a
+        # `Rational{BigInt}` down to `Rational{Int64}` left `simplify_fractions`
+        # dividing a polynomial that still held BigInt rationals by one that no
+        # longer did, and MutableArithmetics has no mixed-width mutable `sub_mul`:
+        # `buffered_operate_to!(::BigInt, ::BigInt, sub_mul, ::BigInt, ::Int64,
+        # ::BigInt) is not implemented`. A rational too large for `Int64` threw an
+        # `InexactError` outright.
+        @testset "BigInt rationals are not narrowed to Int64" begin
+            p = poly_with_coeffs(Number[Rational{BigInt}(1, 2), 3], (1//2 - v))
+            g = poly_to_gcd_form(p)
+            T = eltype(MP.coefficients(g))
+            @test isconcretetype(T)
+            @test T <: Rational
+            @test Rational{BigInt} <: T
+
+            big_p = poly_with_coeffs(Number[Rational{BigInt}(big(10)^25, 7), 1],
+                                      (1//2 - v))
+            @test eltype(MP.coefficients(poly_to_gcd_form(big_p))) <: Rational
+        end
+
         @testset "heterogeneous float kinds (Float32 + Float64)" begin
             p = poly_with_coeffs(Number[Float32(1.5), Float64(-2.5)], (1.5 - v))
             g = poly_to_gcd_form(p)

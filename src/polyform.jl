@@ -257,12 +257,13 @@ function poly_to_gcd_form(p::PolynomialT)
     # content arithmetic overflows (e.g. MomentClosure derivative matching
     # closures going through `simplify` → `simplify_fractions`).
     cs = if all_int
-        Int64.(MP.coefficients(p))
+        is = map(Integer, MP.coefficients(p))
+        T = mapreduce(typeof, promote_type, is; init = Int64)
+        convert(Vector{T}, is)
     elseif all_rat
-        map(c -> begin
-                r = c isa Rational ? c : rationalize(c)
-                Rational{Int64}(Int64(numerator(r)), Int64(denominator(r)))
-            end, MP.coefficients(p))
+        rs = map(c -> c isa Rational ? c : rationalize(c), MP.coefficients(p))
+        T = mapreduce(typeof, promote_type, rs; init = Rational{Int64})
+        convert(Vector{T}, rs)
     elseif any_complex
         (complex ∘ float).(MP.coefficients(p))
     else
